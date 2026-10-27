@@ -29,6 +29,7 @@ struct StudioView: View {
     @State private var draft = ""
     @State private var hasAttachment = false
     @State private var sizeFilter = OptionSizeFilter.all
+    @Environment(WidgetLibrary.self) private var library
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -89,7 +90,7 @@ struct StudioView: View {
                     Text("Options")
                         .font(DS.Typography.headline)
                         .foregroundStyle(DS.Palette.textPrimary)
-                    Text("Six placeholder layouts")
+                    Text("Sample widgets in every shape")
                         .font(DS.Typography.caption)
                         .foregroundStyle(DS.Palette.textSecondary)
                 }
@@ -97,12 +98,16 @@ struct StudioView: View {
                 GlassSegmentedControl(OptionSizeFilter.allCases, selection: $sizeFilter) { $0.title }
             }
             ScrollView {
-                WidgetOptionsGrid()
+                WidgetOptionsGrid(options: options)
                     .padding(DS.Spacing.sm)
             }
             .scrollIndicators(.hidden)
             .scrollClipDisabled()
         }
+    }
+
+    private var options: [WidgetModel] {
+        WidgetOptionsGrid.slotShapes.compactMap { library.firstWidget(shaped: $0) }
     }
 
     private func send() {

@@ -2,6 +2,8 @@ import SwiftUI
 
 @main
 struct NicheWidgetsApp: App {
+    @State private var library = WidgetLibrary()
+
     var body: some Scene {
         Window("Niche Widgets", id: "main") {
             RootView()
@@ -11,6 +13,11 @@ struct NicheWidgetsApp: App {
                     MatteGlassBackground()
                 }
                 .preferredColorScheme(.dark)
+                .environment(library)
+                .task {
+                    guard !AppDirectories.isRunningTests else { return }
+                    await library.start()
+                }
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentMinSize)

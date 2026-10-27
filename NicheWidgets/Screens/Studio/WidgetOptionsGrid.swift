@@ -1,27 +1,13 @@
 import SwiftUI
 
-struct WidgetOption: Identifiable {
-    let id: Int
-    let kind: PlaceholderWidgetKind
-    let headline: String
-    let caption: String
-
-    static var samples: [WidgetOption] {
-        [
-            WidgetOption(id: 0, kind: .widePill, headline: "09:41", caption: "Monday, October 27"),
-            WidgetOption(id: 1, kind: .square, headline: "14°", caption: "Fog, light wind"),
-            WidgetOption(id: 2, kind: .circle, headline: "68%", caption: "Battery"),
-            WidgetOption(id: 3, kind: .tallCard, headline: "Pages", caption: "3 of 5 done"),
-            WidgetOption(id: 4, kind: .roundedRect, headline: "Focus", caption: "25 min left"),
-            WidgetOption(id: 5, kind: .widePill, headline: "Now Playing", caption: "Ambient Works")
-        ]
-    }
-}
-
 struct WidgetOptionsGrid: View {
+    static let slotShapes: [WidgetShape] = [.widePill, .square, .circle, .tallCard, .roundedRect, .squircle]
+
+    let options: [WidgetModel]
+
     var body: some View {
         BentoLayout(spacing: DS.Spacing.lg, maxUnit: DS.Size.optionUnitMax) {
-            ForEach(Array(WidgetOption.samples.enumerated()), id: \.element.id) { index, option in
+            ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
                 WidgetOptionCard(option: option, index: index)
             }
         }
@@ -69,26 +55,26 @@ struct BentoLayout: Layout {
 }
 
 private struct WidgetOptionCard: View {
-    let option: WidgetOption
+    let option: WidgetModel
     let index: Int
     @State private var isHovering = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        PlaceholderWidget(kind: option.kind, seed: option.id, headline: option.headline, caption: option.caption)
-            .overlay(alignment: option.kind == .circle ? .bottom : .topTrailing) {
+        WidgetTile(model: option)
+            .overlay(alignment: option.shape == .circle ? .bottom : .topTrailing) {
                 if isHovering {
                     GlassButton(systemImage: "plus", label: "Add to Library", variant: .iconProminent) {}
                         .padding(DS.Spacing.sm)
                         .transition(.scale(scale: DS.Interaction.appearScale).combined(with: .opacity))
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .scaleEffect(isHovering ? DS.Interaction.cardHoverScale : 1)
-            .dsShadow(isHovering ? DS.Shadow.lifted : DS.Shadow.soft)
             .onHover { isHovering = $0 }
             .animation(DS.Motion.snappy.animation(reduceMotion: reduceMotion), value: isHovering)
             .appearAnimation(.bouncy, index: index)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(option.kind.title) option, \(option.headline)")
+            .accessibilityLabel("\(option.shape.title) option, \(option.name)")
     }
 }

@@ -6,11 +6,27 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		1A0000000000000000000016 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1A000000000000000000000A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1A0000000000000000000006;
+			remoteInfo = "Niche-Widgets";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		1A0000000000000000000010 /* NicheWidgetsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NicheWidgetsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A0000000000000000000001 /* Niche-Widgets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Niche-Widgets.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		1A0000000000000000000011 /* NicheWidgetsTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = NicheWidgetsTests;
+			sourceTree = "<group>";
+		};
 		1A0000000000000000000002 /* NicheWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = NicheWidgets;
@@ -19,6 +35,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1A0000000000000000000012 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1A0000000000000000000003 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				1A0000000000000000000002 /* NicheWidgets */,
+				1A0000000000000000000011 /* NicheWidgetsTests */,
 				1A0000000000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				1A0000000000000000000001 /* Niche-Widgets.app */,
+				1A0000000000000000000010 /* NicheWidgetsTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +73,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		1A0000000000000000000013 /* NicheWidgetsTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A0000000000000000000017 /* Build configuration list for PBXNativeTarget "NicheWidgetsTests" */;
+			buildPhases = (
+				1A0000000000000000000014 /* Sources */,
+				1A0000000000000000000012 /* Frameworks */,
+				1A0000000000000000000015 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1A000000000000000000001A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1A0000000000000000000011 /* NicheWidgetsTests */,
+			);
+			name = NicheWidgetsTests;
+			packageProductDependencies = (
+			);
+			productName = NicheWidgetsTests;
+			productReference = 1A0000000000000000000010 /* NicheWidgetsTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		1A0000000000000000000006 /* Niche-Widgets */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1A0000000000000000000007 /* Build configuration list for PBXNativeTarget "Niche-Widgets" */;
@@ -83,6 +131,10 @@
 					1A0000000000000000000006 = {
 						CreatedOnToolsVersion = 27.1;
 					};
+					1A0000000000000000000013 = {
+						CreatedOnToolsVersion = 27.1;
+						TestTargetID = 1A0000000000000000000006;
+					};
 				};
 			};
 			buildConfigurationList = 1A000000000000000000000B /* Build configuration list for PBXProject "Niche-Widgets" */;
@@ -100,11 +152,19 @@
 			projectRoot = "";
 			targets = (
 				1A0000000000000000000006 /* Niche-Widgets */,
+				1A0000000000000000000013 /* NicheWidgetsTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1A0000000000000000000015 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1A0000000000000000000009 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +175,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1A0000000000000000000014 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1A0000000000000000000008 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +191,49 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		1A000000000000000000001A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1A0000000000000000000006 /* Niche-Widgets */;
+			targetProxy = 1A0000000000000000000016 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		1A0000000000000000000018 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rakshithnair.NicheWidgetsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Niche-Widgets.app/Contents/MacOS/Niche-Widgets";
+			};
+			name = Debug;
+		};
+		1A0000000000000000000019 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rakshithnair.NicheWidgetsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Niche-Widgets.app/Contents/MacOS/Niche-Widgets";
+			};
+			name = Release;
+		};
 		1A000000000000000000000C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -264,6 +373,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1A0000000000000000000017 /* Build configuration list for PBXNativeTarget "NicheWidgetsTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A0000000000000000000018 /* Debug */,
+				1A0000000000000000000019 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		1A0000000000000000000007 /* Build configuration list for PBXNativeTarget "Niche-Widgets" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

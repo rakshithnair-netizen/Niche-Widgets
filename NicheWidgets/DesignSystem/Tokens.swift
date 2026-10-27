@@ -115,12 +115,24 @@ enum DS {
     enum Motion {
         case snappy, smooth, bouncy
 
-        var animation: Animation {
+        var response: Double {
             switch self {
-            case .snappy: .spring(response: 0.28, dampingFraction: 0.8)
-            case .smooth: .spring(response: 0.5, dampingFraction: 0.88)
-            case .bouncy: .spring(response: 0.44, dampingFraction: 0.62)
+            case .snappy: 0.28
+            case .smooth: 0.5
+            case .bouncy: 0.44
             }
+        }
+
+        var dampingFraction: Double {
+            switch self {
+            case .snappy: 0.8
+            case .smooth: 0.88
+            case .bouncy: 0.62
+            }
+        }
+
+        var animation: Animation {
+            .spring(response: response, dampingFraction: dampingFraction)
         }
 
         func animation(reduceMotion: Bool) -> Animation {
@@ -184,6 +196,12 @@ enum DS {
         static let galleryColumn: CGFloat = 90
         static let galleryFieldWidth: CGFloat = 280
         static let galleryShimmerWidth: CGFloat = 320
+        static let galleryWidgetScale: CGFloat = 0.28
+        static let galleryClampScale: CGFloat = 0.4
+        static let galleryReadoutWidth: CGFloat = 220
+        static let stressTile: CGFloat = 64
+        static let resizeHandle: CGFloat = 18
+        static let dash: [CGFloat] = [5, 4]
     }
 }
 

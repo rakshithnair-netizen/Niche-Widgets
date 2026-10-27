@@ -64,14 +64,15 @@ struct ComponentsGalleryView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.xl) {
                 ScreenHeader("Components", subtitle: "Every design system component in every state")
-                section("Glass Button", index: 0) { buttons }
-                section("Glass Text Field", index: 1) { textFields }
-                section("Glass Toggle", index: 2) { toggles }
-                section("Glass Segmented Control", index: 3) { segmentedControls }
-                section("Glass Card", index: 4) { cards }
-                section("Glass Sidebar", index: 5) { sidebar }
-                section("Loading and Empty", index: 6) { feedback }
-                section("Tokens", index: 7) { tokens }
+                section("Widgets", index: 0) { WidgetShowcase() }
+                section("Glass Button", index: 1) { buttons }
+                section("Glass Text Field", index: 2) { textFields }
+                section("Glass Toggle", index: 3) { toggles }
+                section("Glass Segmented Control", index: 4) { segmentedControls }
+                section("Glass Card", index: 5) { cards }
+                section("Glass Sidebar", index: 6) { sidebar }
+                section("Loading and Empty", index: 7) { feedback }
+                section("Tokens", index: 8) { tokens }
             }
             .padding(DS.Spacing.lg)
         }
