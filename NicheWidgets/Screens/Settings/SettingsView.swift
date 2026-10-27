@@ -20,11 +20,13 @@ struct SettingsView: View {
     @State private var pauseWhenHidden = true
     @State private var unloadModels = true
     @State private var pinsPerSearch = PinsPerSearch.medium
+    @Environment(LocalAISettings.self) private var localAI
+    @Environment(ChatSession.self) private var chat
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.lg) {
-                ScreenHeader("Settings", subtitle: "Placeholder preferences for this build")
+                ScreenHeader("Settings", subtitle: "Preferences for this build")
                     .padding(.bottom, DS.Spacing.sm)
                 settingsCard("General", index: 0) {
                     GlassToggle("Launch at login", subtitle: "Open Niche Widgets when you sign in", isOn: $launchAtLogin)
@@ -38,7 +40,10 @@ struct SettingsView: View {
                     GlassDivider()
                     GlassToggle("Reduce transparency", subtitle: "Use a solid matte background", isOn: $reduceTransparency)
                 }
-                settingsCard("Performance", index: 2) {
+                settingsCard("Local AI", index: 2) {
+                    LocalAISettingsSection(settings: localAI, client: chat.client)
+                }
+                settingsCard("Performance", index: 3) {
                     GlassToggle("Pause when hidden", subtitle: "Stop timers while the desktop is covered", isOn: $pauseWhenHidden)
                     GlassDivider()
                     GlassToggle("Unload models after search", subtitle: "Free memory when idle", isOn: $unloadModels)

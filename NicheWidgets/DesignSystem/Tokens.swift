@@ -10,6 +10,7 @@ enum DS {
         static let focusGlow = Color(red: 0.66, green: 0.78, blue: 1.0)
         static let success = Color(red: 0.52, green: 0.86, blue: 0.66)
         static let danger = Color(red: 1.0, green: 0.5, blue: 0.5)
+        static let warning = Color(red: 1.0, green: 0.8, blue: 0.48)
         static let hairline = Color.white.opacity(0.08)
         static let fillSubtle = Color.white.opacity(0.035)
         static let fillHover = Color.white.opacity(0.06)
@@ -141,6 +142,9 @@ enum DS {
 
         static let reducedDuration: Double = 0.12
         static let staggerStep: Double = 0.04
+        static let optionStaggerStep: Double = 0.07
+        static let typingDuration: Double = 0.9
+        static let healthPollInterval: Double = 3
         static let shimmerDuration: Double = 1.5
         static let shimmerBand: CGFloat = 0.45
     }
@@ -162,6 +166,7 @@ enum DS {
         static let appearOffset: CGFloat = 10
         static let screenScale: CGFloat = 0.985
         static let bubbleScale: CGFloat = 0.9
+        static let skeletonPulseOpacity: Double = 0.45
     }
 
     enum Size {
@@ -182,6 +187,15 @@ enum DS {
         static let chatColumnWidth: CGFloat = 360
         static let bubbleMaxWidth: CGFloat = 280
         static let attachmentThumb: CGFloat = 56
+        static let attachmentChip: CGFloat = 44
+        static let attachmentRemove: CGFloat = 18
+        static let promptMaxLines: CGFloat = 5
+        static let optionCaption: CGFloat = 34
+        static let paletteSwatch: CGFloat = 14
+        static let typingDot: CGFloat = 7
+        static let bannerIcon: CGFloat = 36
+        static let settingsFieldWidth: CGFloat = 220
+        static let dropInset: CGFloat = 6
         static let optionUnitMax: CGFloat = 200
         static let libraryItemMin: CGFloat = 200
         static let libraryPreviewAspect: CGFloat = 4 / 3

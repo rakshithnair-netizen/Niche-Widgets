@@ -1,175 +1,196 @@
 import SwiftUI
-
-struct ChatMessage: Identifiable, Hashable {
-    enum Role { case user, assistant }
-
-    let id = UUID()
-    let role: Role
-    let text: String
-    var attachmentSeed: Int? = nil
-
-    static var samples: [ChatMessage] {
-        [
-            ChatMessage(role: .user, text: "Soft brutalist concrete, morning fog, muted sage accents.", attachmentSeed: 1),
-            ChatMessage(role: .assistant, text: "Here are six directions in different shapes. Pick one to refine, or describe what to change."),
-            ChatMessage(role: .user, text: "Make the clock feel calmer and lower contrast."),
-            ChatMessage(role: .assistant, text: "Placeholder reply. The local model connects in a later step.")
-        ]
-    }
-}
-
-enum OptionSizeFilter: String, CaseIterable {
-    case all, small, large
-
-    var title: String { rawValue.capitalized }
-}
+import UniformTypeIdentifiers
 
 struct StudioView: View {
-    @State private var messages = ChatMessage.samples
-    @State private var draft = ""
-    @State private var hasAttachment = false
-    @State private var sizeFilter = OptionSizeFilter.all
-    @Environment(WidgetLibrary.self) private var library
+    @Environment(ChatSession.self) private var session
+    @State private var isDropTargeted = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.xl) {
+        VStack(alignment: .leading, spacing: DS.Spacing.lg) {
             ScreenHeader("Studio", subtitle: "Describe an aesthetic or drop a theme image") {
-                GlassButton("New Session", systemImage: "plus", variant: .secondary) {
+                GlassButton("New Chat", systemImage: "plus", variant: .secondary) {
                     withAnimation(DS.Motion.smooth.animation(reduceMotion: reduceMotion)) {
-                        messages = []
-                        draft = ""
-                        hasAttachment = false
+                        session.newChat()
                     }
                 }
+                .disabled(session.messages.isEmpty && session.attachments.isEmpty && session.draft.isEmpty)
+            }
+            if session.health.needsAttention {
+                ModelStatusBanner(health: session.health) {
+                    Task { await session.refreshHealth() }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)).combined(with: .scale(scale: DS.Interaction.appearScale, anchor: .top)))
             }
             HStack(alignment: .top, spacing: DS.Spacing.xl) {
                 chatColumn
                     .frame(width: DS.Size.chatColumnWidth)
-                optionsColumn
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                OptionsColumn(session: session)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         }
         .padding(DS.Spacing.lg)
+        .overlay {
+            let shape = RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous)
+            shape
+                .strokeBorder(DS.Palette.focusGlow, style: StrokeStyle(lineWidth: DS.Stroke.focus, dash: DS.Size.dash))
+                .background(shape.fill(DS.Palette.fillSubtle))
+                .padding(DS.Size.dropInset)
+                .opacity(isDropTargeted ? 1 : 0)
+                .scaleEffect(isDropTargeted || reduceMotion ? 1 : DS.Interaction.screenScale)
+                .allowsHitTesting(false)
+        }
+        .onDrop(of: [.fileURL, .image], isTargeted: $isDropTargeted, perform: handleDrop)
+        .animation(DS.Motion.smooth.animation(reduceMotion: reduceMotion), value: session.health.needsAttention)
+        .animation(DS.Motion.snappy.animation(reduceMotion: reduceMotion), value: isDropTargeted)
+        .task(id: session.settings.resolvedModel) { await session.refreshHealth() }
+        .task(id: session.health.needsAttention) {
+            guard session.health.needsAttention else { return }
+            await session.pollHealthWhileUnavailable()
+        }
     }
 
     private var chatColumn: some View {
         VStack(spacing: DS.Spacing.md) {
             ZStack {
-                if messages.isEmpty {
-                    EmptyStateView(
-                        systemImage: "text.bubble",
-                        title: "Start with a vibe",
-                        message: "Type a few words or attach a theme image to get widget options."
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: DS.Spacing.md) {
-                            ForEach(Array(messages.enumerated()), id: \.element.id) { index, message in
-                                ChatBubble(message: message)
-                                    .appearAnimation(.bouncy, index: index)
-                                    .transition(.chatBubble(isUser: message.role == .user, reduceMotion: reduceMotion))
-                            }
+                if session.messages.isEmpty {
+                    VStack(spacing: DS.Spacing.lg) {
+                        EmptyStateView(
+                            systemImage: "text.bubble",
+                            title: "Start with a vibe",
+                            message: "Type a few words or attach a theme image to get six widget options."
+                        )
+                        ExamplePromptChips(prompts: ChatSession.examplePrompts) { prompt in
+                            session.useExample(prompt)
                         }
-                        .padding(.vertical, DS.Spacing.xs)
                     }
-                    .scrollIndicators(.hidden)
-                    .defaultScrollAnchor(.bottom)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .transition(.opacity)
+                } else {
+                    ChatMessageList(session: session)
+                        .transition(.opacity)
                 }
             }
             .frame(maxHeight: .infinity)
-            PromptBar(text: $draft, hasAttachment: $hasAttachment, onSend: send)
+            .animation(DS.Motion.smooth.animation(reduceMotion: reduceMotion), value: session.messages.isEmpty)
+            PromptBar(session: session)
         }
     }
 
-    private var optionsColumn: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.md) {
-            HStack {
-                VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                    Text("Options")
-                        .font(DS.Typography.headline)
-                        .foregroundStyle(DS.Palette.textPrimary)
-                    Text("Sample widgets in every shape")
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(DS.Palette.textSecondary)
+    private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
+        var accepted = false
+        for provider in providers.prefix(ImageAttachmentLoader.maxAttachments) {
+            if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                accepted = true
+                _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                    guard let url else { return }
+                    Task { @MainActor in session.attach(urls: [url]) }
                 }
-                Spacer(minLength: DS.Spacing.lg)
-                GlassSegmentedControl(OptionSizeFilter.allCases, selection: $sizeFilter) { $0.title }
+            } else if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                accepted = true
+                let name = provider.suggestedName ?? "Dropped image"
+                _ = provider.loadDataRepresentation(for: .image) { data, _ in
+                    guard let data else { return }
+                    Task { @MainActor in session.attach(data: data, name: name) }
+                }
             }
+        }
+        return accepted
+    }
+}
+
+private struct OptionsColumn: View {
+    @Bindable var session: ChatSession
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            header
             ScrollView {
-                WidgetOptionsGrid(options: options)
-                    .padding(DS.Spacing.sm)
+                ZStack(alignment: .topLeading) {
+                    if session.isGenerating {
+                        WidgetOptionsSkeleton()
+                            .transition(.opacity)
+                    } else if let displayed = session.displayed {
+                        WidgetOptionsGrid(options: displayed.result.options, selection: $session.selectedOptionID)
+                            .id(displayed.id)
+                            .transition(.opacity)
+                    } else {
+                        EmptyStateView(
+                            systemImage: "square.grid.2x2",
+                            title: "No options yet",
+                            message: "Six widget designs in different shapes and sizes appear here."
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, DS.Spacing.xxxl)
+                        .transition(.opacity)
+                    }
+                }
+                .padding(DS.Spacing.sm)
             }
             .scrollIndicators(.hidden)
             .scrollClipDisabled()
+            .animation(DS.Motion.smooth.animation(reduceMotion: reduceMotion), value: session.isGenerating)
+            .animation(DS.Motion.smooth.animation(reduceMotion: reduceMotion), value: session.displayed?.id)
         }
     }
 
-    private var options: [WidgetModel] {
-        WidgetOptionsGrid.slotShapes.compactMap { library.firstWidget(shaped: $0) }
-    }
-
-    private func send() {
-        let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty || hasAttachment else { return }
-        let message = ChatMessage(role: .user, text: trimmed.isEmpty ? "Theme image" : trimmed, attachmentSeed: hasAttachment ? 4 : nil)
-        withAnimation(DS.Motion.bouncy.animation(reduceMotion: reduceMotion)) {
-            messages.append(message)
-            draft = ""
-            hasAttachment = false
+    private var header: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Options")
+                    .font(DS.Typography.headline)
+                    .foregroundStyle(DS.Palette.textPrimary)
+                Spacer(minLength: DS.Spacing.lg)
+                if let displayed = session.displayed, !session.isGenerating {
+                    PaletteStrip(colors: displayed.result.palette)
+                        .transition(.opacity)
+                }
+            }
+            if let displayed = session.displayed, !session.isGenerating {
+                Text(displayed.result.aesthetic)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Palette.textSecondary)
+                    .lineLimit(2)
+                    .transition(.opacity)
+                ScrollView(.horizontal) {
+                    HStack(spacing: DS.Spacing.xs) {
+                        ForEach(Array(displayed.result.searchTerms.enumerated()), id: \.offset) { index, term in
+                            SearchTermChip(term: term)
+                                .appearAnimation(.smooth, index: index)
+                        }
+                    }
+                    .padding(.vertical, DS.Spacing.xxs)
+                }
+                .scrollIndicators(.never)
+                .id(displayed.id)
+                .transition(.opacity)
+            } else {
+                Text(session.isGenerating ? "Designing six directions…" : "Pick an example or describe a vibe")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Palette.textSecondary)
+                    .contentTransition(.opacity)
+            }
         }
+        .animation(DS.Motion.smooth.animation(reduceMotion: reduceMotion), value: session.isGenerating)
     }
 }
 
-extension AnyTransition {
-    static func chatBubble(isUser: Bool, reduceMotion: Bool) -> AnyTransition {
-        if reduceMotion {
-            return .opacity
-        }
-        return .asymmetric(
-            insertion: .scale(scale: DS.Interaction.bubbleScale, anchor: isUser ? .bottomTrailing : .bottomLeading).combined(with: .opacity),
-            removal: .opacity
-        )
-    }
-}
-
-struct ChatBubble: View {
-    let message: ChatMessage
-
-    private var isUser: Bool { message.role == .user }
+private struct SearchTermChip: View {
+    let term: String
 
     var body: some View {
-        let shape = UnevenRoundedRectangle(
-            cornerRadii: RectangleCornerRadii(
-                topLeading: DS.Radius.lg,
-                bottomLeading: isUser ? DS.Radius.lg : DS.Radius.xs,
-                bottomTrailing: isUser ? DS.Radius.xs : DS.Radius.lg,
-                topTrailing: DS.Radius.lg
-            ),
-            style: .continuous
-        )
-        HStack(spacing: 0) {
-            if isUser { Spacer(minLength: DS.Spacing.xxl) }
-            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                if let seed = message.attachmentSeed {
-                    PlaceholderArtwork(seed: seed)
-                        .frame(width: DS.Size.attachmentThumb, height: DS.Size.attachmentThumb)
-                        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm, style: .continuous))
-                        .glassRim(RoundedRectangle(cornerRadius: DS.Radius.sm, style: .continuous))
-                }
-                Text(message.text)
-                    .font(DS.Typography.body)
-                    .foregroundStyle(DS.Palette.textPrimary)
-                    .textSelection(.enabled)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.horizontal, DS.Spacing.md)
-            .padding(.vertical, DS.Spacing.md)
-            .frame(maxWidth: DS.Size.bubbleMaxWidth, alignment: .leading)
-            .glassEffect(.regular.tint(isUser ? DS.Glass.bubbleUser : DS.Glass.bubbleAssistant), in: shape)
-            .glassRim(shape)
-            if !isUser { Spacer(minLength: DS.Spacing.xxl) }
+        let shape = Capsule()
+        HStack(spacing: DS.Spacing.xs) {
+            Image(systemName: "magnifyingglass")
+                .font(DS.Typography.micro)
+            Text(term)
+                .font(DS.Typography.caption)
         }
+        .foregroundStyle(DS.Palette.textSecondary)
+        .padding(.horizontal, DS.Spacing.sm)
+        .frame(height: DS.Size.controlHeightSmall)
+        .glassEffect(.regular.tint(DS.Glass.surface), in: shape)
+        .glassRim(shape, strength: DS.Interaction.restRim)
     }
 }

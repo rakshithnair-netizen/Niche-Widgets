@@ -7,9 +7,6 @@ struct GlassTextField<Leading: View, Trailing: View>: View {
     private let leading: Leading
     private let trailing: Trailing
     @FocusState private var isFocused: Bool
-    @State private var isHovering = false
-    @Environment(\.glassForcedState) private var forcedState
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(_ placeholder: String, text: Binding<String>, onSubmit: @escaping () -> Void = {}, @ViewBuilder leading: () -> Leading, @ViewBuilder trailing: () -> Trailing) {
         self.placeholder = placeholder
@@ -19,18 +16,7 @@ struct GlassTextField<Leading: View, Trailing: View>: View {
         self.trailing = trailing()
     }
 
-    private var showsFocus: Bool {
-        if let forcedState { return forcedState == .focused }
-        return isFocused
-    }
-
-    private var showsHover: Bool {
-        if let forcedState { return forcedState == .hover }
-        return isHovering
-    }
-
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
         HStack(alignment: .bottom, spacing: DS.Spacing.sm) {
             leading
             ZStack(alignment: .leading) {
@@ -55,23 +41,52 @@ struct GlassTextField<Leading: View, Trailing: View>: View {
             .frame(minHeight: DS.Size.controlHeight)
             trailing
         }
-        .padding(DS.Spacing.sm)
-        .background(shape.fill(Color.white.opacity(showsHover && !showsFocus ? DS.Interaction.hoverHighlight / 2 : 0)))
-        .glassEffect(.regular.tint(DS.Glass.surface), in: shape)
-        .glassInnerShadow(shape)
-        .glassRim(shape, strength: showsFocus ? 0 : 1)
-        .overlay(
-            shape
-                .strokeBorder(DS.Palette.focusGlow, lineWidth: DS.Stroke.focus)
-                .opacity(showsFocus ? 1 : 0)
-                .allowsHitTesting(false)
-        )
-        .shadow(color: showsFocus ? DS.Shadow.focus.color : .clear, radius: DS.Shadow.focus.radius)
-        .contentShape(shape)
+        .glassFieldChrome(isFocused: isFocused)
         .onTapGesture { isFocused = true }
-        .onHover { isHovering = $0 }
-        .animation(DS.Motion.smooth.animation(reduceMotion: reduceMotion), value: showsFocus)
-        .animation(DS.Motion.snappy.animation(reduceMotion: reduceMotion), value: showsHover)
+    }
+}
+
+struct GlassFieldChrome: ViewModifier {
+    let isFocused: Bool
+    @State private var isHovering = false
+    @Environment(\.glassForcedState) private var forcedState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var showsFocus: Bool {
+        if let forcedState { return forcedState == .focused }
+        return isFocused
+    }
+
+    private var showsHover: Bool {
+        if let forcedState { return forcedState == .hover }
+        return isHovering
+    }
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
+        content
+            .padding(DS.Spacing.sm)
+            .background(shape.fill(Color.white.opacity(showsHover && !showsFocus ? DS.Interaction.hoverHighlight / 2 : 0)))
+            .glassEffect(.regular.tint(DS.Glass.surface), in: shape)
+            .glassInnerShadow(shape)
+            .glassRim(shape, strength: showsFocus ? 0 : 1)
+            .overlay(
+                shape
+                    .strokeBorder(DS.Palette.focusGlow, lineWidth: DS.Stroke.focus)
+                    .opacity(showsFocus ? 1 : 0)
+                    .allowsHitTesting(false)
+            )
+            .shadow(color: showsFocus ? DS.Shadow.focus.color : .clear, radius: DS.Shadow.focus.radius)
+            .contentShape(shape)
+            .onHover { isHovering = $0 }
+            .animation(DS.Motion.smooth.animation(reduceMotion: reduceMotion), value: showsFocus)
+            .animation(DS.Motion.snappy.animation(reduceMotion: reduceMotion), value: showsHover)
+    }
+}
+
+extension View {
+    func glassFieldChrome(isFocused: Bool) -> some View {
+        modifier(GlassFieldChrome(isFocused: isFocused))
     }
 }
 
