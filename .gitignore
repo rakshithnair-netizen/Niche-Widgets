@@ -1,0 +1,17 @@
+.DS_Store
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+.env
+*.key
+*.pem
+*.p12
+Secrets.swift
+Cookies/
+*.binarycookies
+Cache/
+Caches/
